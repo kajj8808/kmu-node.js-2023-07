@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+  </head>
+
+<body>
+<header>
+    <%- include('../header') %>
+</header>
+<main>
+
+    <div class="container" style="position: relative;">
+        <video id="video" width="640" height="480" autoplay playsinline muted style="position: absolute; top: 20px; padding: 10px 20px;;"></video>
+        <!-- 그리기 영역 정의, 비디오 영역에 겹쳐서 그림 -->
+        <canvas id="canvas" width="640" height="480" style="position: absolute; top: 20px; padding: 10px 20px;;"></canvas>
+    </div>
+</main>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<!-- coco ssd 데이터 셋/레이블 데이터 으로 학습된거.  -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+/* 이미지 넷 -> 레이블 해놓은 것 */
+/* 이걸로 만든게 이미지넷 */
+/* 클레식 -> 많은 이미지로  */
+/* 오브젝트 -> 네모 그어서 레이블링 함 // 수업시간 많을 때 ㄱㅊ 레이블링 cvat / 로보 플로우 */
+/* 세그넷 , ssd 이런건 욜로로 */
+    let webcam, model;
+
+    async function app() {
+        webcam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        video.srcObject = webcam;
+        model = await cocoSsd.load();
+        
+        loop();
+    }
+    async function loop() {
+        context.drawImage(video, 0, 0);
+        const predictions = await model.detect(canvas);
+        console.log('Predictions: ', predictions);
+
+        /* 객체 탐지 결과 드로잉 */
+        for (let i=0; i<predictions.length; i++) {
+            let [x, y, width, height] = predictions[i].bbox;
+            
+            context.beginPath();
+            context.lineWidth = 2;
+            context.strokeStyle = "#00ff00";
+            context.strokeRect(x, y, width, height);  /* 외각선 */
+            context.fillStyle = "tomato";
+            context.fillRect(x, y-20, width, 20); /* 채워진 박스 */
+            
+            context.font = "18px Arial";
+            context.fillStyle = "#f1f1f1";
+            context.fillText(`${predictions[i].class} :  ${parseFloat(predictions[i].score).toFixed(2)}`, x, y);
+
+        }
+        
+        requestAnimationFrame(loop);
+    }
+    app();
+</script>
+</body>
+</html>

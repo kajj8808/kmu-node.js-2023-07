@@ -71,17 +71,25 @@
     }
     //예측
     async function predict() {
+      /* 
+        이미지 학습된 모델 사용하는 방법.
+        1. 이미지 -> 텐서
+        2. 사이즈 조절 ( 학습 데이터 )
+        3. 정규화 0-1
+        4. shape 변환 ( 예측 이미지 수 , 가로 , 세로 )
+       */
       let image = document.getElementById("preview");
       // 이미지 픽셀값을 텐서로 변환
       image = tf.browser.fromPixels(image);
       // 이미지 사이즈 조절, div(255) : 0-1 사이의 값으로 정규화 -> 0 ~ 255 라 0 아니면 1 으로.
+      // 여기선 255 로 나눔
       image = tf.image.resizeBilinear(image, [224, 224]).div(255);
       // 차원 확대(shape 변경, axis=0), (224, 244)를 (1, 224, 224)로 변환
       image = tf.expandDims(image, 0);
       // arraySync() : 텐서를 배열로 변환하여 반환
       pred = model.predict(image).arraySync();
       // topk : top K 반환(예측 결과 중 가장 정확도가 높은 3개의 확률과 인덱스 반환)
-      const { values, indices } = tf.topk(pred, 10);
+      const { values, indices } = tf.topk(pred, 10); //indices 몇번째 인지 라벨 매칭 을 위해 사용
       const index = indices.arraySync()[0];
       const probability = values.arraySync()[0];
       console.log(index, probability);
