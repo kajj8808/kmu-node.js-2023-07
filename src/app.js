@@ -1,20 +1,55 @@
 import express from "express";
+import passport from "passport";
+import session from "express-session";
+import flash from "connect-flash";
 import dotenv from "dotenv";
-import IndedRouter from "./routers/index";
-import DustRouter from "./routers/dust";
+
+import mainRouter from "./routes/index";
+import dustRouter from "./routes/dust";
+import userRouter from "./routes/user";
+import newsRouter from "./routes/news";
+import wifiRouter from "./routes/wifi";
+import maskRouter from "./routes/mask";
+import tfjsRouter from "./routes/tfjs";
+
+import passportConfig from "./passport";
 
 dotenv.config();
-
-const PORT = 8080;
+const PORT = process.env.SERVER_PORT ?? 8080;
 
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// auth pass port inital option..
+passportConfig();
+app.use(
+  session({
+    resave: false,
+    saveUninitialized: false,
+    secret: "sessionsecretsessionsecret",
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+app.use(express.static(`${__dirname}/public`));
+
 app.set("views", `${__dirname}/views`);
 app.set("view engine", "ejs");
 
-app.get("/", IndedRouter);
+app.use("/", mainRouter);
+app.use("/dust", dustRouter);
+app.use("/user", userRouter);
+app.use("/news", newsRouter);
+app.use("/wifi", wifiRouter);
+app.use("/mask", maskRouter);
+app.use("/tfjs", tfjsRouter);
 
-app.get("/dust", DustRouter);
+function handleListen() {
+  console.log(`Listening on port: http://localhost:${PORT}`);
+}
 
-const handleListen = () =>
-  console.log(`Server is Ready :http://localhost:${PORT}`);
 app.listen(PORT, handleListen);
+//oralcoder
