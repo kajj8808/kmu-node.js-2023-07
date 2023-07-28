@@ -40,4 +40,14 @@ router.get("/inference4", async function (req, res) {
   res.render("tfjs/inference4");
 });
 
+// transfer #1
+router.get("/transfer1", async function (req, res) {
+  res.render("tfjs/transfer1");
+});
+
+// transfer #2
+router.get("/transfer2", async function (req, res) {
+  res.render("tfjs/transfer2");
+});
+
 export default router;
